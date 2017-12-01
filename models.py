@@ -15,9 +15,22 @@ secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)for x 
 
 class User(Base):
     __tablename__ = 'user'
-    id = Column(Integer, primary_key=True)
+    user_id = Column(String(32), primary_key=True)
     username = Column(String(32), index=True)
     password_hash = Column(String(64))
+
+    # methods to support login manager
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):
+        return True
+
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return self.user_id
 
     def hash_password(self, password):
         self.password_hash = pwd_context.encrypt(password)
@@ -25,10 +38,10 @@ class User(Base):
     def verify_password(self, password):
         return pwd_context.verify(password,self.password_hash)
 
-    def generate_auth_token(self,expiration=600):
-        s = Serializer(secret_key,expires_in = expiration)
-        print s.dumps({ 'id':self.id })
-        return s.dumps({ 'id':self.id })
+    # def generate_auth_token(self,expiration=600):
+    #     s = Serializer(secret_key,expires_in = expiration)
+    #     print s.dumps({ 'id':self.id })
+    #     return s.dumps({ 'id':self.id })
 
     @staticmethod
     def verify_auth_token(token):
@@ -77,7 +90,7 @@ class Item(Base):
         'category' : self.category,
             }
 
-engine = create_engine('sqlite:///catalog.db')
+engine = create_engine('sqlite:///catalog.db',convert_unicode=True)
 
 
 Base.metadata.create_all(engine)

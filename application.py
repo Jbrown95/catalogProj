@@ -1,6 +1,8 @@
 from flask import Flask,render_template,redirect,url_for,request,abort, g
-from flask.ext.httpauth import HTTPBasicAuth
-auth = HTTPBasicAuth()
+from flask import session as login_session
+from flask_login import login_manager,LoginManager,login_user
+
+
 
 # database modules
 from models import Base, Item, Category,User
@@ -8,28 +10,40 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
 
-engine = create_engine('sqlite:///catalog.db')
+engine = create_engine('sqlite:///catalog.db',convert_unicode=True)
 
 Base.metadata.bind = engine
 DBSession = sessionmaker(bind=engine)
 session = DBSession()
 app = Flask(__name__)
 
+login_manager = LoginManager()
+login_manager.init_app(app)
 
-@auth.verify_password
-def verify_password(username_or_token, password):
-    #Try to see if it's a token first
-    user_id = User.verify_auth_token(username_or_token)
-    if user_id:
-        user = session.query(User).filter_by(id = user_id).one()
-    else:
-        user = session.query(User).filter_by(username = username_or_token).first()
-        if not user or not user.verify_password(password):
-            return False
-    g.user = user
-    print(user.username)
-    print(1)
-    return True
+
+@login_manager.user_loader
+def load_user(user_id):
+    try:
+        user = session.query(User).filter_by(user_id = user_id).first()
+    except Exception:
+        user = None
+    return user
+
+
+# @auth.verify_password
+# def verify_password(username_or_token, password):
+#     #Try to see if it's a token first
+#     user_id = User.verify_auth_token(username_or_token)
+#     if user_id:
+#         user = session.query(User).filter_by(id = user_id).one()
+#     else:
+#         user = session.query(User).filter_by(username = username_or_token).first()
+#         if not user or not user.verify_password(password):
+#             return False
+#     g.user = user
+#     print(user.username)
+#     print(1)
+#     return True
 
 
 
@@ -53,11 +67,21 @@ def login():
             return redirect(url_for('login'))
         else:
             user = session.query(User).filter_by(username = username).first()
+            print(type(user))
             if not user or not user.verify_password(password):
                 return redirect(url_for('login'))
-            g.user = user
-            token = g.user.generate_auth_token()
-            return redirect(url_for('home'))
+            print(user.get_id())
+            print(type(user))
+            print(user.is_authenticated())
+            print(user.is_anonymous())
+            login_user(user)
+            # return redirect(url_for('home'))
+            print(0)
+            category = session.query(Category).all()
+            print(1)
+            items = session.query(Item).order_by(Item.created_date.desc()).all()
+            print(2)
+            return render_template('home.html',category=category,items=items)
 
 @app.route('/logout')
 def logout():
@@ -73,12 +97,11 @@ def new_user():
     elif request.method =='POST':
         username = request.form['username']
         password = request.form['password']
-        print(username,password)
         if username == '' or password == '':
             return redirect(url_for('new_user'))
         elif session.query(User).filter_by(username=username).first() is not None:
             return redirect(url_for('new_user'))
-        user = User(username = username)
+        user = User(username = username,user_id=username)
         user.hash_password(password)
         session.add(user)
         session.commit()
@@ -100,7 +123,7 @@ def catalogItem(category_name,item_name):
 
 
 @app.route('/catalog/add/category',methods=['GET','POST'])
-@auth.login_required
+# @auth.login_required
 def addCategory():
     print
     if request.method == 'GET':
