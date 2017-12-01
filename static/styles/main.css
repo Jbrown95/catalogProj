@@ -1,0 +1,62 @@
+.header {
+  display: block;
+  flex-wrap: nowrap;
+  color: white;
+  background-color: #001837;
+  margin-bottom: 2%;
+
+
+
+}
+
+.body {
+  display: block;
+  background-color: #DDDDDD;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  margin-left: auto;
+  margin-right: auto;
+
+}
+hr {
+  color: black;
+  background-color: black;
+  height: 1px;
+}
+.sub-body{
+  background-color: white;
+  max-width: 80%;
+
+}
+.btn {
+  color: #ff1c01;
+  float:right;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.row {
+
+
+}
+@media screen and (min-width: 576px) {
+  .verticalLine {
+    border-right: thin dotted #000000;
+  }
+  .col-sm-4 {
+    display: block;
+    flex-wrap: wrap;
+    min-width: 50%;
+  }
+
+}
+@media screen and (max-width: 575px) {
+.main-header{
+  font-size: 200%;
+}
+.col-sm-6 {
+  max-width: 50%;
+
+}
+.body {
+  margin-right: 10%
+}

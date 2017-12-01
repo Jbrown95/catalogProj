@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+<div class='sub-body container-fluid'>
+    <div class='row'>
+      <div class='col-sm-12' style='min-width:100%;'>
+        <p><a style="float:right" href="{{url_for('home')}}">Back</a></p>
+        <h1 >{{category_name.name}}</h1>
+        <p><a href="{{url_for('deleteCategory',category_name=category_name.name)}}">Delete Category</a></p>
+        <hr>
+        <h2>Related Items</h2>
+        <p><a href="{{url_for('addItem')}}">Add Item</a></p>
+        <hr>
+        {% for item in items %}
+        <p><a href="{{url_for('itemDescription',item_name=item.item_name)}}">{{item.item_name}}</a></p>
+        {% endfor %}
+  </div>
+  </div>
+</div>
+{% endblock %}

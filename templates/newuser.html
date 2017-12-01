@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block body %}
+<div class='sub-body container-fluid'>
+    <div class='row'>
+      <div class='col-sm-12' style='min-width:100%;'>
+        <h1 >Create New User</h1>
+        <p><a value='Login' href="{{url_for('login')}}">Login</a></p>
+
+      <hr>
+      <form action="{{url_for('new_user')}}" method = 'POST'>
+
+      <p>Username:</p>
+
+      <input type='text' size='30' name='username'>
+    </br>
+  </br>
+      <p>Password:</p>
+      <input type='text' size='30' name='password'>
+
+      <input type='submit' value='Create'>
+
+      </form>
+      {% for i in users %}
+        {{i.username}}
+      {% endfor %}
+  </div>
+  </div>
+</div>
+{% endblock %}

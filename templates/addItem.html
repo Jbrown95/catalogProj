@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block body %}
+<div class='sub-body container-fluid'>
+  <p><a style="float:right" href="{{url_for('home')}}">Back</a></p>
+    <div class='row'>
+      <div class='col-sm-12' style='min-width:100%;'>
+        <h1 >Add An Item</h1>
+      <hr>
+      <p> form for adding an item</p>
+      <form action="{{url_for('addItem')}}" method = 'POST'>
+
+      <p>Name:</p>
+      <input type='text' size='30' name='name'>
+      <p>Description:</p>
+      <input type='text' size='30' name='description'>
+      <p>Category</p>
+      <p><select name="category">
+        <option value="default">{{default}}</option>
+        {% for i in categories %}
+        <option value="{{i.id}}">{{i.name}}</option>
+        {% endfor %}
+      </select></p>
+
+      <input type='submit' value='Create'>
+
+      </form>
+  </div>
+  </div>
+</div>
+{% endblock %}

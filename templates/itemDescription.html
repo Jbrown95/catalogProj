@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block body %}
+<div class='sub-body container-fluid'>
+    <div class='row'>
+      <div class='col-sm-12 verticalLine' style='min-width:50%;'>
+        <p><a style="float:right" href="{{url_for('home')}}">Back</a></p>
+        <h1 >{{item.item_name}}</h1>
+        <p><a href="{{url_for('deleteItem',item_name=item.item_name)}}">Delete Item</a></p>
+
+        <hr>
+        <p>description:{{item.description}}<p>
+      </div>
+    </div>
+</div>
+{% endblock %}
