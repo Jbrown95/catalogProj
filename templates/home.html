@@ -5,7 +5,9 @@
       <div class='col-sm-4 verticalLine' style='min-width:50%;'>
         <h1 >Categories</h1>
         <hr>
+        {% if current_user.get_id() %}
         <a href="{{url_for('addCategory')}}">Add Category</a>
+        {% endif %}
         </br>
         </br>
         <div >
@@ -17,7 +19,9 @@
   <div class='col-sm-4' style='min-width:50%;'>
     <h1>Items</h1>
     <hr>
+    {% if current_user.get_id() %}
     <a href="{{url_for('addItem')}}">Add Item</a>
+    {% endif %}
   </br>
   </br>
     {% for i in items %}

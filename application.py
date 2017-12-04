@@ -1,6 +1,8 @@
 from flask import Flask,render_template,redirect,url_for,request,abort, g
 from flask import session as login_session
-from flask_login import login_manager,LoginManager,login_user
+from flask_login import login_manager,LoginManager,login_user,logout_user,login_required
+from urlparse import urlparse, urljoin
+
 
 
 
@@ -17,8 +19,11 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 app = Flask(__name__)
 
+USE_SESSION_FOR_NEXT = True
 login_manager = LoginManager()
 login_manager.init_app(app)
+login_manager.login_view = "login"
+
 
 
 @login_manager.user_loader
@@ -29,23 +34,11 @@ def load_user(user_id):
         user = None
     return user
 
-
-# @auth.verify_password
-# def verify_password(username_or_token, password):
-#     #Try to see if it's a token first
-#     user_id = User.verify_auth_token(username_or_token)
-#     if user_id:
-#         user = session.query(User).filter_by(id = user_id).one()
-#     else:
-#         user = session.query(User).filter_by(username = username_or_token).first()
-#         if not user or not user.verify_password(password):
-#             return False
-#     g.user = user
-#     print(user.username)
-#     print(1)
-#     return True
-
-
+def is_safe_url(target):
+    ref_url = urlparse(request.host_url)
+    test_url = urlparse(urljoin(request.host_url, target))
+    return test_url.scheme in ('http', 'https') and \
+           ref_url.netloc == test_url.netloc
 
 
 @app.route('/')
@@ -58,11 +51,12 @@ def home():
 @app.route('/login',methods=['GET','POST'])
 def login():
     if request.method == 'GET':
-        return render_template('login.html')
-    else:
+        next = request.args.get('next')
+        return render_template('login.html',next = next)
+    elif request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        print(username,password)
+        next = request.form['next']
         if username == '' or password == '':
             return redirect(url_for('login'))
         else:
@@ -70,23 +64,23 @@ def login():
             print(type(user))
             if not user or not user.verify_password(password):
                 return redirect(url_for('login'))
-            print(user.get_id())
-            print(type(user))
-            print(user.is_authenticated())
-            print(user.is_anonymous())
-            login_user(user)
-            # return redirect(url_for('home'))
-            print(0)
-            category = session.query(Category).all()
-            print(1)
-            items = session.query(Item).order_by(Item.created_date.desc()).all()
-            print(2)
-            return render_template('home.html',category=category,items=items)
 
-@app.route('/logout')
+            login_user(user)
+            if not is_safe_url(str(next)):
+                return abort(400)
+            if next == 'None':
+                return redirect(url_for('home'))
+            else:
+                return redirect(next)
+
+
+
+@app.route("/logout")
+@login_required
 def logout():
-    g.user = ''
+    logout_user()
     return redirect(url_for('home'))
+
 
 @app.route('/new_user',methods=['GET','POST'])
 def new_user():
@@ -105,6 +99,7 @@ def new_user():
         user.hash_password(password)
         session.add(user)
         session.commit()
+
         return redirect(url_for('home'))
 
 
@@ -123,12 +118,9 @@ def catalogItem(category_name,item_name):
 
 
 @app.route('/catalog/add/category',methods=['GET','POST'])
-# @auth.login_required
+@login_required
 def addCategory():
-    print
-    if request.method == 'GET':
-        return render_template('addCat.html')
-    elif request.method == 'POST':
+    if request.method == 'POST':
         if request.form['name']:
             name = request.form['name']
             try:
@@ -143,10 +135,11 @@ def addCategory():
             return render_template('addCat.html')
 
     else:
-        return "NOPE"
+        return render_template('addCat.html')
 
 
 @app.route('/catalog/delete/category/<string:category_name>',methods=['GET','POST'])
+@login_required
 def deleteCategory(category_name):
     if request.method == 'GET':
         try:
@@ -165,6 +158,7 @@ def deleteCategory(category_name):
 
 
 @app.route('/catalog/add/item',methods=['GET','POST'])
+@login_required
 def addItem():
     if request.method == 'GET':
         categories = session.query(Category).all()
@@ -202,6 +196,7 @@ def addItem():
 
 
 @app.route('/catalog/delete/<string:item_name>/')
+@login_required
 def deleteItem(item_name):
     if request.method == 'GET':
         item_to_delete = session.query(Item).filter_by(item_name=item_name).one()
@@ -222,4 +217,4 @@ def itemDescription(item_name):
 if __name__ == '__main__':
     app.secret_key = "super_secret_key"
     app.debug = True
-    app.run(host = '0.0.0.0', port = 8080)
+    app.run(host = '0.0.0.0', port = 5000)
