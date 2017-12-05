@@ -203,6 +203,22 @@ def addItem(category_name):
                                            categories=categories)
 
 
+@app.route('/catalog/<string:item_name>/update/item/',methods=['GET','POST'])
+@login_required
+def updateItem(item_name):
+    if request.method == 'GET':
+        item = session.query(Item).filter_by(item_name=item_name).one()
+        return render_template('updateItem.html',item=item)
+    elif request.method == 'POST':
+        item = session.query(Item).filter_by(item_name=item_name).one()
+        item.name = request.form['name']
+        item.description = request.form['description']
+        session.add(item)
+        session.commit()
+        return redirect(url_for('itemDescription',item_name=item.name))
+
+
+
 @app.route('/catalog/delete/<string:item_name>/')
 @login_required
 def deleteItem(item_name):
