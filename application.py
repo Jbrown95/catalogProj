@@ -168,12 +168,12 @@ def deleteCategory(category_name):
         return redirect(url_for('home'))
 
 
-@app.route('/catalog/add/item', methods=['GET', 'POST'])
+@app.route('/catalog/<string:category_name>/add/item/', methods=['GET', 'POST'])
 @login_required
-def addItem():
+def addItem(category_name):
     if request.method == 'GET':
         categories = session.query(Category).all()
-        return render_template('addItem.html', categories=categories)
+        return render_template('addItem.html', categories=categories,category_name=category_name)
     elif request.method == 'POST':
         categories = session.query(Category).all()
         try:
@@ -183,7 +183,6 @@ def addItem():
             item_to_add = Item(item_name=item_name,
                                description=item_description,
                                category_id=item_category)
-            print(1)
         except:
             return render_template('addItem.html', categories=categories)
         try:

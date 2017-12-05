@@ -20,7 +20,7 @@
     <h1>Items</h1>
     <hr>
     {% if current_user.get_id() %}
-    <a href="{{url_for('addItem')}}">Add Item</a>
+    <a href="{{url_for('addItem',category_name='Any')}}">Add Item</a>
     {% endif %}
   </br>
   </br>

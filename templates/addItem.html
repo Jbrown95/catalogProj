@@ -7,7 +7,7 @@
         <h1 >Add An Item</h1>
       <hr>
       <p> form for adding an item</p>
-      <form action="{{url_for('addItem')}}" method = 'POST'>
+      <form action="{{url_for('addItem',category_name='')}}" method = 'POST'>
 
       <p>Name:</p>
       <input type='text' size='30' name='name'>
@@ -17,7 +17,7 @@
       <p><select name="category">
         <option value="default">{{default}}</option>
         {% for i in categories %}
-        <option value="{{i.id}}">{{i.name}}</option>
+        <option value="{{i.id}}" {%if i.name == category_name%} selected{% endif %}>{{i.name}}</option>
         {% endfor %}
       </select></p>
 
