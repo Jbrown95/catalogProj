@@ -168,12 +168,14 @@ def deleteCategory(category_name):
         return redirect(url_for('home'))
 
 
-@app.route('/catalog/<string:category_name>/add/item/', methods=['GET', 'POST'])
+@app.route('/catalog/<string:category_name>/add/item/',
+           methods=['GET', 'POST'])
 @login_required
 def addItem(category_name):
     if request.method == 'GET':
         categories = session.query(Category).all()
-        return render_template('addItem.html', categories=categories,category_name=category_name)
+        return render_template('addItem.html', categories=categories,
+                               category_name=category_name)
     elif request.method == 'POST':
         categories = session.query(Category).all()
         try:
@@ -203,20 +205,19 @@ def addItem(category_name):
                                            categories=categories)
 
 
-@app.route('/catalog/<string:item_name>/update/item/',methods=['GET','POST'])
+@app.route('/catalog/<string:item_name>/update/item/', methods=['GET', 'POST'])
 @login_required
 def updateItem(item_name):
     if request.method == 'GET':
         item = session.query(Item).filter_by(item_name=item_name).one()
-        return render_template('updateItem.html',item=item)
+        return render_template('updateItem.html', item=item)
     elif request.method == 'POST':
         item = session.query(Item).filter_by(item_name=item_name).one()
         item.name = request.form['name']
         item.description = request.form['description']
         session.add(item)
         session.commit()
-        return redirect(url_for('itemDescription',item_name=item.name))
-
+        return redirect(url_for('itemDescription', item_name=item.name))
 
 
 @app.route('/catalog/delete/<string:item_name>/')
