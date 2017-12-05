@@ -3,7 +3,8 @@ from models import Base,  Item,  Category, User
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship,  sessionmaker
 from sqlalchemy import create_engine
-from flask import Flask, render_template, redirect, url_for, request, abort,  g
+from flask import Flask, render_template, redirect, url_for, request, abort,\
+                  g, jsonify
 from flask import session as login_session
 from flask_login import login_manager, LoginManager, login_user, logout_user, \
     login_required
@@ -43,6 +44,12 @@ def home():
     category = session.query(Category).all()
     items = session.query(Item).order_by(Item.created_date.desc()).all()
     return render_template('home.html', category=category, items=items)
+
+
+@app.route('/catalog/json')
+def catalog_serialize():
+    category = session.query(Category).all()
+    return jsonify(Category=[x.serialize for x in category])
 
 
 @app.route('/login', methods=['GET', 'POST'])

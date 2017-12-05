@@ -64,15 +64,26 @@ class Category(Base):
     __tablename__ = 'category'
     id = Column(Integer,  primary_key=True)
     name = Column(String)
+    items = relationship("Item", backref="category")
 
     @property
     def serialize(self):
         """Return object data in easily serializeable format"""
+
+        output_items = []
+        for item in self.items:
+            itm = {
+                    'id': item.id,
+                    'cat_id': self.id,
+                    'description': item.description,
+                    'item_name': item.item_name,
+            }
+            output_items.append(itm)
+
         return {
                 'id': self.id,
-                'name': self.item_name,
-                'description': self.description,
-                'category': self.category,
+                'Item': output_items,
+                'name': self.name
                 }
 
 
@@ -83,16 +94,15 @@ class Item(Base):
     description = Column(String)
     created_date = Column(DateTime,  default=datetime.datetime.utcnow)
     category_id = Column(Integer,  ForeignKey('category.id'))
-    category = relationship(Category)
 
     @property
     def serialize(self):
         """Return object data in easily serializeable format"""
         return {
                 'id': self.id,
-                'name': self.item_name,
+                'item_name': self.item_name,
+                'created_date': self.created_date,
                 'description': self.description,
-                'category': self.category,
                 }
 
 
