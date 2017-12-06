@@ -7,7 +7,7 @@
         <h1 >Add An Item</h1>
       <hr>
       <p> form for adding an item</p>
-      <form action="{{url_for('addItem',category_name='')}}" method = 'POST'>
+      <form action="{{url_for('addItem',category_name=category_name)}}" method = 'POST'>
 
       <p>Name:</p>
       <input type='text' size='30' name='name'>
@@ -20,7 +20,7 @@
         <option value="{{i.id}}" {%if i.name == category_name%} selected{% endif %}>{{i.name}}</option>
         {% endfor %}
       </select></p>
-
+      <input style="display:none" name='category_name' value='{{category_name}}'>
       <input type='submit' value='Create'>
 
       </form>

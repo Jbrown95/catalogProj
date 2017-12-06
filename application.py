@@ -65,7 +65,6 @@ def login():
             return redirect(url_for('login'))
         else:
             user = session.query(User).filter_by(username=username).first()
-            print(type(user))
             if not user or not user.verify_password(password):
                 return redirect(url_for('login'))
 
@@ -176,8 +175,10 @@ def addItem(category_name):
         categories = session.query(Category).all()
         return render_template('addItem.html', categories=categories,
                                category_name=category_name)
+
     elif request.method == 'POST':
         categories = session.query(Category).all()
+        category_names = request.form['category_name']
         try:
             item_name = request.form['name']
             item_description = request.form['description']
@@ -186,14 +187,17 @@ def addItem(category_name):
                                description=item_description,
                                category_id=item_category)
         except:
-            return render_template('addItem.html', categories=categories)
+            return render_template('addItem.html', categories=categories,
+                                   category_name=category_names)
         try:
             session.query(Item).filter_by(item_name=item_name).one()
-            return render_template('addItem.html', categories=categories)
+            return render_template('addItem.html', categories=categories,
+                                   category_name=category_names)
 
         except:
             if item_name == '' or item_description == '':
-                return render_template('addItem.html', categories=categories)
+                return render_template('addItem.html', categories=categories,
+                                       category_name=category_names)
             else:
                 try:
                     session.query(Category).filter_by(id=item_category).one()
@@ -202,7 +206,8 @@ def addItem(category_name):
                     return redirect(url_for('home'))
                 except:
                     return render_template('addItem.html',
-                                           categories=categories)
+                                           categories=categories,
+                                           category_name=category_names)
 
 
 @app.route('/catalog/<string:item_name>/update/item/', methods=['GET', 'POST'])
@@ -213,11 +218,11 @@ def updateItem(item_name):
         return render_template('updateItem.html', item=item)
     elif request.method == 'POST':
         item = session.query(Item).filter_by(item_name=item_name).one()
-        item.name = request.form['name']
+        item.item_name = request.form['name']
         item.description = request.form['description']
         session.add(item)
         session.commit()
-        return redirect(url_for('itemDescription', item_name=item.name))
+        return redirect(url_for('itemDescription', item_name=item.item_name))
 
 
 @app.route('/catalog/delete/<string:item_name>/')
