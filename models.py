@@ -17,7 +17,7 @@ secret_key = ''.join(random.choice(string.ascii_uppercase + string.digits)for
 
 class User(Base):
     __tablename__ = 'user'
-    user_id = Column(String(32),  primary_key=True)
+    user_id = Column(Integer(),  primary_key=True)
     username = Column(String(32),  index=True)
     password_hash = Column(String(64))
 

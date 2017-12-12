@@ -1,5 +1,7 @@
 Flask==0.12.2
 flask_login==0.4.1
+protobuf==3.5.0.post1
+google_auth_oauthlib==0.2.0
 itsdangerous==0.24
 passlib==1.7.1
 SQLAlchemy==1.2.0b3

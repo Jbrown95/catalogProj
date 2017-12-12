@@ -8,6 +8,18 @@ from flask import Flask, render_template, redirect, url_for, request, abort,\
 from flask import session as login_session
 from flask_login import login_manager, LoginManager, login_user, logout_user, \
     login_required
+import google.oauth2.credentials
+import google_auth_oauthlib.flow
+from google.auth.transport import requests
+from google.oauth2 import id_token
+import os
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
+API_SERVICE_NAME = 'drive'
+API_VERSION = 'v2'
+CLIENT_SECRETS_FILE = "client_secrets.json"
+CLIENT_ID = "506667308951-5oe67n05mhm7l"+\
+            "brikk73aremtrm45ihn.apps.googleusercontent.com"
 
 
 engine = create_engine('sqlite:///catalog.db', convert_unicode=True)
@@ -50,6 +62,46 @@ def home():
 def catalog_serialize():
     category = session.query(Category).all()
     return jsonify(Category=[x.serialize for x in category])
+
+
+@app.route('/tokensignin', methods=['POST'])
+def tokensignin():
+    if request.method == 'POST':
+        token = request.form['idtoken']
+        try:
+            idinfo = id_token.verify_oauth2_token(token, requests.Request(),
+                                                  CLIENT_ID)
+
+            # Or, if multiple clients access the backend server:
+            # idinfo = id_token.verify_oauth2_token(token, requests.Request())
+            # if idinfo['aud'] not in [CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3]:
+            #     raise ValueError('Could not verify audience.')
+
+            if idinfo['iss'] not in ['accounts.google.com',
+                                     'https://accounts.google.com']:
+                raise ValueError('Wrong issuer.')
+
+            # If auth request is from a G Suite domain:
+            # if idinfo['hd'] != GSUITE_DOMAIN_NAME:
+            #     raise ValueError('Wrong hosted domain.')
+
+            # ID token is valid. Get the user's Google
+            # Account ID from the decoded token.
+            userid = idinfo['sub']
+        except ValueError:
+            # Invalid token
+            pass
+        try:
+            user = session.query(User).\
+                   filter_by(username=idinfo['email']).one()
+            login_user(user)
+            return idinfo['email']
+        except:
+            new_user = User(username=idinfo['email'])
+            session.add(new_user)
+            session.commit()
+            login_user(new_user)
+            return idinfo['email']
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -98,7 +150,7 @@ def new_user():
         elif session.query(User).filter_by(username=username).first() \
                 is not None:
             return redirect(url_for('new_user'))
-        user = User(username=username, user_id=username)
+        user = User(username=username)
         user.hash_password(password)
         session.add(user)
         session.commit()
@@ -244,7 +296,8 @@ def itemDescription(item_name):
     elif request.method == 'POST':
         return redirect(url_for('home'))
 
+
 if __name__ == '__main__':
     app.secret_key = "super_secret_key"
     app.debug = True
-    app.run(host='0.0.0.0',  port=5000)
+    app.run(host='0.0.0.0',  port=8080)
