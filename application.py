@@ -18,7 +18,7 @@ SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
 API_SERVICE_NAME = 'drive'
 API_VERSION = 'v2'
 CLIENT_SECRETS_FILE = "client_secrets.json"
-CLIENT_ID = "506667308951-5oe67n05mhm7l"+\
+CLIENT_ID = "506667308951-5oe67n05mhm7l" + \
             "brikk73aremtrm45ihn.apps.googleusercontent.com"
 
 
@@ -37,6 +37,7 @@ login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
+    """Loads user for login.user"""
     try:
         user = session.query(User).filter_by(user_id=user_id).first()
     except Exception:
@@ -45,6 +46,7 @@ def load_user(user_id):
 
 
 def is_safe_url(target):
+    """Verifys the url is safe to forward too"""
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url,  target))
     return test_url.scheme in ('http',  'https') and \
@@ -53,6 +55,7 @@ def is_safe_url(target):
 
 @app.route('/')
 def home():
+    """Home Page"""
     category = session.query(Category).all()
     items = session.query(Item).order_by(Item.created_date.desc()).all()
     return render_template('home.html', category=category, items=items)
@@ -60,12 +63,14 @@ def home():
 
 @app.route('/catalog/json')
 def catalog_serialize():
+    """Returns serialized json of entire catalog"""
     category = session.query(Category).all()
     return jsonify(Category=[x.serialize for x in category])
 
 
 @app.route('/tokensignin', methods=['POST'])
 def tokensignin():
+    """Gsignin token signin process"""
     if request.method == 'POST':
         token = request.form['idtoken']
         try:
@@ -106,20 +111,24 @@ def tokensignin():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Login Page"""
     if request.method == 'GET':
         next = request.args.get('next')
         return render_template('login.html', next=next)
     elif request.method == 'POST':
+        # gets user info
         username = request.form['username']
         password = request.form['password']
         next = request.form['next']
+        # makes sure info exists
         if username == '' or password == '':
             return redirect(url_for('login'))
         else:
+            # checks to see if user exists and password is correct
             user = session.query(User).filter_by(username=username).first()
             if not user or not user.verify_password(password):
                 return redirect(url_for('login'))
-
+            # Logs in user
             login_user(user)
             if not is_safe_url(str(next)):
                 return abort(400)
@@ -132,16 +141,17 @@ def login():
 @app.route("/logout")
 @login_required
 def logout():
+    """Logout Page"""
     logout_user()
     return redirect(url_for('home'))
 
 
 @app.route('/new_user', methods=['GET', 'POST'])
 def new_user():
+    """Method for creating new user"""
     if request.method == 'GET':
         users = session.query(User).all()
         return render_template('newuser.html', users=users)
-
     elif request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
@@ -160,6 +170,7 @@ def new_user():
 
 @app.route('/catalog/<string:category_name>/items')
 def category(category_name):
+    """Page for a category, listing its items"""
     try:
         category_name = session.query(Category).\
             filter_by(name=category_name).one()
@@ -171,14 +182,10 @@ def category(category_name):
         return redirect(url_for('home'))
 
 
-@app.route('/catalog/<string:category_name>/<string:item_name>')
-def catalogItem(category_name, item_name):
-    return "this is the the category_item Page"
-
-
 @app.route('/catalog/add/category', methods=['GET', 'POST'])
 @login_required
 def addCategory():
+    """Method for adding a category"""
     if request.method == 'POST':
         if request.form['name']:
             name = request.form['name']
@@ -186,7 +193,8 @@ def addCategory():
                 session.query(Category).filter_by(name=name).one()
                 return render_template('addCat.html')
             except:
-                category = Category(name=name)
+                category = Category(name=name,
+                                    created_by=login_session['user_id'])
                 session.add(category)
                 session.commit()
                 return redirect(url_for('home'))
@@ -201,6 +209,7 @@ def addCategory():
            methods=['GET', 'POST'])
 @login_required
 def deleteCategory(category_name):
+    """Method for Deleting a category"""
     if request.method == 'GET':
         try:
             session.query(Category).filter_by(name=category_name).one()
@@ -210,12 +219,13 @@ def deleteCategory(category_name):
     elif request.method == 'POST':
         category_to_delete = session.query(Category)\
             .filter_by(name=category_name).one()
-        items = session.query(Item)\
-            .filter_by(category_id=category_to_delete.id).all()
-        for i in items:
-            session.delete(i)
-        session.delete(category_to_delete)
-        session.commit()
+        if category_to_delete.created_by == login_session['user_id']:
+            items = session.query(Item)\
+                .filter_by(category_id=category_to_delete.id).all()
+            for i in items:
+                session.delete(i)
+            session.delete(category_to_delete)
+            session.commit()
         return redirect(url_for('home'))
 
 
@@ -223,6 +233,7 @@ def deleteCategory(category_name):
            methods=['GET', 'POST'])
 @login_required
 def addItem(category_name):
+    """Method for Adding and Item"""
     if request.method == 'GET':
         categories = session.query(Category).all()
         return render_template('addItem.html', categories=categories,
@@ -235,9 +246,11 @@ def addItem(category_name):
             item_name = request.form['name']
             item_description = request.form['description']
             item_category = request.form['category']
+
             item_to_add = Item(item_name=item_name,
                                description=item_description,
-                               category_id=item_category)
+                               category_id=item_category,
+                               created_by=login_session['user_id'])
         except:
             return render_template('addItem.html', categories=categories,
                                    category_name=category_names)
@@ -265,31 +278,42 @@ def addItem(category_name):
 @app.route('/catalog/<string:item_name>/update/item/', methods=['GET', 'POST'])
 @login_required
 def updateItem(item_name):
+    """Method for updating an item"""
     if request.method == 'GET':
-        item = session.query(Item).filter_by(item_name=item_name).one()
-        return render_template('updateItem.html', item=item)
+        try:
+            item = session.query(Item).filter_by(item_name=item_name).one()
+            return render_template('updateItem.html', item=item)
+        except:
+            return redirect(url_for('home'))
     elif request.method == 'POST':
-        item = session.query(Item).filter_by(item_name=item_name).one()
-        item.item_name = request.form['name']
-        item.description = request.form['description']
-        session.add(item)
-        session.commit()
+        try:
+            item = session.query(Item).filter_by(item_name=item_name).one()
+        except:
+            return redirect(url_for('home'))
+        if item.created_by == login_session['user_id']:
+            item.item_name = request.form['name']
+            item.description = request.form['description']
+            session.add(item)
+            session.commit()
         return redirect(url_for('itemDescription', item_name=item.item_name))
 
 
 @app.route('/catalog/delete/<string:item_name>/')
 @login_required
 def deleteItem(item_name):
+    """Method For deleting an item"""
     if request.method == 'GET':
         item_to_delete = session.query(Item)\
             .filter_by(item_name=item_name).one()
-        session.delete(item_to_delete)
-        session.commit()
+        if item_to_delete.created_by == login_session['user_id']:
+            session.delete(item_to_delete)
+            session.commit()
         return redirect(url_for('home'))
 
 
 @app.route('/catalog/<string:item_name>/description', methods=['GET', 'POST'])
 def itemDescription(item_name):
+    """Page for Item description"""
     if request.method == 'GET':
         item = session.query(Item).filter_by(item_name=item_name).one()
         return render_template('itemDescription.html', item=item)

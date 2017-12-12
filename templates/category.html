@@ -5,7 +5,7 @@
       <div class='col-sm-12' style='min-width:100%;'>
         <p><a style="float:right" href="{{url_for('home')}}">Back</a></p>
         <h1 >{{category_name.name}}</h1>
-        {% if current_user.get_id() %}
+        {% if current_user.get_id() == category_name.created_by %}
         <p><a href="{{url_for('deleteCategory',category_name=category_name.name)}}">Delete Category</a></p>
         {% endif %}
         <hr>

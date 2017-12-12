@@ -32,7 +32,6 @@
           <h1 class='main-header'>Catalog App</h1>
         </div>
         <div class='col-sm-6'>
-          <p>{{login_session}}</p>
           {% if current_user.get_id() %}
           <p><a class='btn' type='button' value='login' href="{{url_for('logout')}}" onclick='signOut();';>logout</a></p>
           <p> Welcome {{current_user.username }}</p>

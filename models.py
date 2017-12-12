@@ -65,6 +65,7 @@ class Category(Base):
     id = Column(Integer,  primary_key=True)
     name = Column(String)
     items = relationship("Item", backref="category")
+    created_by = Column(Integer)
 
     @property
     def serialize(self):
@@ -94,6 +95,7 @@ class Item(Base):
     description = Column(String)
     created_date = Column(DateTime,  default=datetime.datetime.utcnow)
     category_id = Column(Integer,  ForeignKey('category.id'))
+    created_by = Column(Integer)
 
     @property
     def serialize(self):
