@@ -68,6 +68,16 @@ def catalog_serialize():
     return jsonify(Category=[x.serialize for x in category])
 
 
+@app.route('/catalog/<string:item_name>/json')
+def item_serialize(item_name):
+    """Returns serialized json of entire catalog"""
+    try:
+        item = session.query(Item).filter_by(item_name=item_name).one()
+    except:
+        return redirect(url_for('home'))
+    return jsonify(Item=[item.serialize])
+
+
 @app.route('/tokensignin', methods=['POST'])
 def tokensignin():
     """Gsignin token signin process"""

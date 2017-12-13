@@ -105,6 +105,7 @@ class Item(Base):
                 'item_name': self.item_name,
                 'created_date': self.created_date,
                 'description': self.description,
+                'category': self.category.name
                 }
 
 
